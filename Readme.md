@@ -2,13 +2,19 @@
 
 **Jaeger middleware to request tracing for express application**
 
+## Required Reading Opentracing 
+To fully understand Opentracing, it's helpful to be familiar with the [OpenTracing project](http://opentracing.io) and
+[terminology](http://opentracing.io/documentation/pages/spec.html) more specifically.
+## Required Reading Jaeger 
+To fully understand Jaeger, it's helpful to be familiar with the [Jaeger project](https://www.jaegertracing.io) and [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)
+
 ## Installation
 
 ```
 npm i @chankamlam/express-jaeger -S
 ```
 
-## Architecture
+## Architecture of Jaeger Server
 for development
 ![avatar](https://www.jaegertracing.io/img/architecture-v1.png)
 for prodution
@@ -19,6 +25,7 @@ for prodution
 docker run -d -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 -p5775:5775/udp -p6831:6831/udp -p6832:6832/udp \
   -p5778:5778 -p16686:16686 -p14268:14268 -p9411:9411 jaegertracing/all-in-one:latest
 ```
+
 
 ## Usage
 ```
@@ -51,6 +58,21 @@ app.get("/normalUsingSpan2Log", async function (req, res) {
     res.send({code: 200, msg: "success"});
 });
 
+app.get("/errorUsingSpan2Log", async function (req, res) {
+    const span = req.span;
+    try {
+      throw Error("err");           // create exception to test
+    } catch (err) {
+      span.setTag("error", true);   // diaplay to JaegerUI when you mark tag as "error"
+      span.log({
+        level: "error",
+        message: err.message
+      });
+    }
+    span.finish();
+    res.send({code: 200, msg: "success"});
+});
+
 app.get("/remoteCallingAndlogResult", async function (req, res) {
     const span = req.span;
     const result = await req.request("http://localhost:3001/bc", {
@@ -61,6 +83,8 @@ app.get("/remoteCallingAndlogResult", async function (req, res) {
     span.finish();
     res.send({code: 200, msg: "success"});
 });
+
+
 
 app.listen(3000, '127.0.0.1', function () {
     console.log('start server...');
