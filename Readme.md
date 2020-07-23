@@ -48,39 +48,61 @@ const config = {
 // setup options, defaut is {}
 const options = { baggagePrefix: "-Johua-" };
 
-// using jager,after this it will has three objects(span,tracer,request)binding in req
+/*  
+ *  using jager,after this it will has one object which called jaeger,
+ *  with four properties(span,tracer,request,tags) binding in req
+ */
 app.use(jaeger(config,options));
 
 app.get("/normalUsingSpan2Log", async function (req, res) {
-    const span = req.span;
-    span.log({event: "timestamp", value: Date.now()});
-    span.finish();
+    const jaeger = req.jaeger;
+    jaeger.log("timestamp",Date.now());
+    jaeger.finish();
     res.send({code: 200, msg: "success"});
 });
 
 app.get("/errorUsingSpan2Log", async function (req, res) {
-    const span = req.span;
+    const jaeger = req.jaeger;
+    const tags = req.jaeger.tags;
     try {
       throw Error("err");           // create exception to test
     } catch (err) {
-      span.setTag("error", true);   // diaplay to JaegerUI when you mark tag as "error"
-      span.log({
-        level: "error",
-        message: err.message
-      });
+      jaeger.setTag(tags.ERROR, true);   // diaplay to JaegerUI when you mark tag as "error"
+      jaeger.log("errorMsg", err.message);
     }
-    span.finish();
+    jaeger.finish();
     res.send({code: 200, msg: "success"});
 });
 
 app.get("/remoteCallingAndlogResult", async function (req, res) {
-    const span = req.span;
-    const result = await req.request("http://localhost:3001/bc", {
-        tracer: req.tracer,
-        rootSpan: req.span
-      });
-    span.logEvent("result",result)
-    span.finish();
+    const jaeger = req.jaeger
+    // for remote request, you have to use jaeger.request which wrap request by tracing
+    const result = await jaeger.request("http://localhost:3001/bc");
+    jaeger.log("result",result)
+    jaeger.finish();
+    res.send({code: 200, msg: "success"});
+});
+
+app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
+
+    const jaeger = req.jaeger
+
+    // default under master span (auto create by every request)
+    const span1 = jaeger.createSpan("resut1")
+    const result1 = await jaeger.request("http://localhost:3001/a");
+    span1.log("result1",result1)
+    span1.finish();
+
+    // default under master span (auto create by every request)
+    const span2 = jaeger.createSpan("resut2")
+    const result2 = await jaeger.request("http://localhost:3001/b");
+    span2.log("result2",result2)
+    span2.finish();
+
+    jaeger.log("resultOfMasterSpan","here is master span")
+    Jaeger.finish()
+
+
     res.send({code: 200, msg: "success"});
 });
 
@@ -141,6 +163,19 @@ for what is usage of the param, pls look up to "jaeger-client"
     traceId128bit: "boolean",
     shareRpcSpan: "boolean",
     debugThrottler: "boolean",
+}
+```
+
+## jaeger
+```
+{
+  log        : function(name,content)    // write the log to master span
+  setTag     : function(name,Value)      // setup tag to master span
+  createSpan : function(name)            // create a new span un der master span
+  finish     : function()                // master span finished
+  tracer     : object
+  span       : object
+  tags       : object                    // all defined tags of opentracing which can be used
 }
 ```
 

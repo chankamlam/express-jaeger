@@ -1,7 +1,11 @@
 const { initTracer } = require("jaeger-client");
-const { FORMAT_HTTP_HEADERS } = require("opentracing");
+const { FORMAT_HTTP_HEADERS,Tags } = require("opentracing");
 const request = require("./request")
 
+tags = {
+  ...Tags,
+  "PROTOCAL":"protocal"
+}
 
 const defaultSampler = {
   type: "const",
@@ -30,23 +34,55 @@ var defaultConfig =  {
 };
 
 
-var tracer=null
+var tracer  = null
+
+var span = null
+
+const createSpan = (spanName,cfg)=>{
+  if(tracer==null) return
+    return tracer.startSpan(spanName,cfg)
+}
 
 const Jaeger = (cfg={},opt={})=>{
 
     return (req,res,next)=>{
         if(tracer==null){
-            defaultConfig = {...defaultConfig,...cfg}
-            defaultOptions = {...defaultOptions,...opt}
-            tracer = initTracer(defaultConfig, defaultOptions);
+            const config = {...defaultConfig,...cfg}
+            const options = {...defaultOptions,...opt}
+            tracer = initTracer(config, options);
+            console.log("init tracer...Done")
         }
-        const parent = tracer.extract(FORMAT_HTTP_HEADERS, req.headers);
-        const _config = parent ? { childOf: parent } : {};
-        const span = tracer.startSpan(`${req.hostname}`, _config);
+        var parent = tracer.extract(FORMAT_HTTP_HEADERS, req.headers);
+        parent = parent ? { childOf: parent } : {};
+        span = tracer.startSpan(req.hostname+req.originalUrl, parent);
         span.setTag("route", req.path);
-        req.span = span
-        req.tracer = tracer
-        req.request = request
+        span.setTag(tags.PROTOCAL,req.protocol)
+        span.setTag(tags.HTTP_METHOD,req.method)
+        // span.setTag(tags.HTTP_URL,"asas")
+        req.jaeger = {
+          span,
+          tracer,
+          tags,
+          request : (url)=>{
+            return request(url,{
+              tracer: tracer,
+              rootSpan: span
+            })
+          },
+          log:(name,content)=>{
+            span.logEvent(name,content)
+          },
+          setTag:(tag,val)=>{
+            span.setTag(tag,val)
+          },
+          finish:()=>{
+            span.finish()
+          },
+          createSpan:(name)=>{
+            return tracer.startSpan(name,{ childOf:span })
+          }
+        }
+        console.log("init span...Done")
         next();
     }
 }
