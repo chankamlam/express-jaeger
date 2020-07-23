@@ -9,8 +9,12 @@ npm i @chankamlam/express-jaeger -S
 ```
 
 ## Architecture
+for development
+![avatar](https://www.jaegertracing.io/img/architecture-v1.png)
+for prodution
+![avatar](https://www.jaegertracing.io/img/architecture-v2.png)
 
-## Build up Jaeger Server Infra locally
+## Build up Jaeger Server Infra locally(development env)
 ```
 docker run -d -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 -p5775:5775/udp -p6831:6831/udp -p6832:6832/udp \
   -p5778:5778 -p16686:16686 -p14268:14268 -p9411:9411 jaegertracing/all-in-one:latest
@@ -68,11 +72,11 @@ app.listen(3000, '127.0.0.1', function () {
 for what is usage of the param, pls look up to "jaeger-client"
 ```
 {
-  serviceName: "string",
+  serviceName: "string",           // required
   disable: "boolean",
   sampler: {
-    type: "string", // required
-    param: "number", // required
+    type: "string",                // required
+    param: "number",               // required
     hostPort: "string",
     host: "string",
     port: "number",
@@ -82,7 +86,7 @@ for what is usage of the param, pls look up to "jaeger-client"
     logSpans: "boolean",
     agentHost: "string",
     agentPort: "number",
-    collectorEndpoint: "string",
+    collectorEndpoint: "string",   // required
     username: "string",
     password: "string",
     flushIntervalMs: "number"
