@@ -91,6 +91,10 @@ app.listen(3000, '127.0.0.1', function () {
 });
 
 ```
+## Lookup Request Tracing
+open http://localhost:16686
+![avatar](pic/1.png)
+![avatar](pic/2.png)
 
 ## Config
 for what is usage of the param, pls look up to "jaeger-client"
