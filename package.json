@@ -1,0 +1,31 @@
+{
+  "name": "@chankamlam/express-jaeger",
+  "version": "0.0.3",
+  "description": "Jaeger middleware to request tracing for express application",
+  "keywords": [
+    "Jaeger",
+    "Tracing",
+    "Request Tracing",
+    "Jaeger Client With Express",
+    "Express Jaeger"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "chankamlam",
+    "email": "919125189@qq.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chankamlam/express-jaeger"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "jaeger-client": "^3.18.0",
+    "opentracing": "^0.14.4",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {}
+}
