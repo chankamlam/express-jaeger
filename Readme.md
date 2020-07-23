@@ -20,19 +20,19 @@ const express = require("express");
 const jaeger = require("@chankamlam/express-jaeger")
 const app = express();
 
-// setup config
+// setup config, atleast need this param
 const config = {
-    serviceName: 'aservice-express',
-    sampler: {
+    serviceName: 'aservice-express',                              // your service name
+    sampler: {                                                    // setup sampler
         type: "const",
         param: 1
     },
     reporter: {
-        collectorEndpoint: "http://localhost:14268/api/traces"
+        collectorEndpoint: "http://localhost:14268/api/traces"    // your jaeger server endpoint
     },
 };
 
-// setup options
+// setup options, defaut is {}
 const options = { baggagePrefix: "-Johua-" };
 
 // using jager,after this it will has three objects(span,tracer,request)binding in req
@@ -63,6 +63,7 @@ app.listen(3000, '127.0.0.1', function () {
 ```
 
 ## Config
+for what is usage of the param, pls look up to "jaeger-client"
 ```
 {
   serviceName: "string",
@@ -93,5 +94,16 @@ app.listen(3000, '127.0.0.1', function () {
 ```
 
 ## options
+for what is usage of the param, pls look up to "jaeger-client"
 ```
+{
+    contextKey: "string",
+    baggagePrefix: "string",
+    metrics: "object", // a metrics
+    logger: "object",  // a logger
+    tags: "object",    // set of key-value pairs which will be set as process-level tags on the Tracer itself.
+    traceId128bit: "boolean",
+    shareRpcSpan: "boolean",
+    debugThrottler: "boolean",
+}
 ```
