@@ -2,7 +2,7 @@
 
 **Jaeger middleware to request tracing for express application**
 
-## Required Reading 
+# Required Reading 
 
 #### _Opentracing_ 
    _To fully understand Opentracing, it's helpful to be familiar with the [OpenTracing project](http://opentracing.io) and
@@ -11,7 +11,7 @@
 #### _Jaeger(One Of Request Tracing System implement Opentracing)_
    _To fully understand Jaeger, it's helpful to be familiar with the [Jaeger project](https://www.jaegertracing.io) and [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)_
 
-## Simple Concept
+# Simple Concept
 ![avatar](https://www.jaegertracing.io/img/spans-traces.png)
 
 > #### _One request map to one trace_
@@ -22,7 +22,7 @@
 
 
 
-## Installation
+# Installation
 
 ```
 npm i @chankamlam/express-jaeger -S
@@ -44,7 +44,7 @@ docker run -d -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 -p5775:5775/udp -p6831:6831/udp
 ```
 
 
-## Usage
+# Usage
 ```
 const express = require("express");
 const jaeger = require("@chankamlam/express-jaeger")
@@ -130,9 +130,9 @@ app.listen(3000, '127.0.0.1', function () {
 });
 
 ```
-## Lookup Request Tracing
+# Lookup Request Tracing
 
-open url  http://localhost:16686 , remember to build up the Jager Server locally first
+> open url  http://localhost:16686 , remember to build up the Jager Server locally first
 
 ![avatar](https://raw.githubusercontent.com/chankamlam/express-jaeger/master/pic/1.png)
 ![avatar](https://raw.githubusercontent.com/chankamlam/express-jaeger/master/pic/2.png)
