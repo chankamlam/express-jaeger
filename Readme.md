@@ -140,8 +140,8 @@ app.listen(3000, '127.0.0.1', function () {
 
 # Object Detail
 
-> ## _Config_
-**for what is usage of the param, pls look up to "jaeger-client"**
+## _Config_
+> for what is usage of the param, pls look up to "jaeger-client"
 ```
 {
   serviceName: "string",           // required
