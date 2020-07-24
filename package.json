@@ -1,6 +1,6 @@
 {
   "name": "@chankamlam/express-jaeger",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Jaeger middleware to request tracing for express application",
   "keywords": [
     "Jaeger",

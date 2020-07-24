@@ -14,11 +14,11 @@
 ## Simple Concept
 ![avatar](https://www.jaegertracing.io/img/spans-traces.png)
 
-> ### One request map to one trace
+> ### _One request map to one trace_
 
-> ### One trace atleast has one span which is master span
+> ### _One trace atleast has one span which is master span_
 
-> ### Master span can have many children spans
+> ### _Master span can have many children spans_
 
 
 
