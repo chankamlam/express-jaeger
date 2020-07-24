@@ -43,7 +43,45 @@ docker run -d -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 -p5775:5775/udp -p6831:6831/udp
   -p5778:5778 -p16686:16686 -p14268:14268 -p9411:9411 jaegertracing/all-in-one:latest
 ```
 
+# Quick Start
+```
+const express = require("express");
+const jaeger = require("@chankamlam/express-jaeger");
+const app = express();
 
+const config = {
+    serviceName: 'service1-express',
+    sampler: {
+        type: "const",
+        param: 1
+    },
+    reporter: {
+        collectorEndpoint: "http://localhost:14268/api/traces"
+    },
+};                                             // required
+const options = { baggagePrefix: "-Johua-" };  // optional,you can let options={}
+
+app.use(express.json()) // for parsing application/json
+app.use(express.urlencoded({ extended: true })) // for parsing application/
+x-www-form-urlencoded
+
+app.use(jaeger(config,options,(req,res)=>{
+   // here to write your code
+   // which is showing here is to auto record query/body/path for every request
+    const jaeger = req.jaeger
+    jaeger.setTag("route",req.path)
+    jaeger.setTag("body",req.body)
+    jaeger.setTag("query",req.query)
+}));
+
+app.all("/abc", async function (req, res) {
+    res.send({code: 200, msg: result});
+});
+
+app.listen(3000, '127.0.0.1', function () {
+    console.log('start');
+});
+```
 # Usage
 ```
 const express = require("express");
@@ -74,7 +112,6 @@ app.use(jaeger(config,options));
 app.get("/normalUsingSpan2Log", async function (req, res) {
     const jaeger = req.jaeger;
     jaeger.log("timestamp",Date.now());
-    jaeger.finish();
     res.send({code: 200, msg: "success"});
 });
 
@@ -87,7 +124,6 @@ app.get("/errorUsingSpan2Log", async function (req, res) {
       jaeger.setTag(tags.ERROR, true);   // diaplay to JaegerUI when you mark tag as "error"
       jaeger.log("errorMsg", err.message);
     }
-    jaeger.finish();
     res.send({code: 200, msg: "success"});
 });
 
@@ -96,7 +132,6 @@ app.get("/remoteCallingAndlogResult", async function (req, res) {
     // for remote request, you have to use jaeger.request which wrap request by tracing
     const result = await jaeger.request("http://localhost:3001/bc");
     jaeger.log("result",result)
-    jaeger.finish();
     res.send({code: 200, msg: "success"});
 });
 
@@ -117,9 +152,6 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
     span2.finish();
 
     jaeger.log("resultOfMasterSpan","here is master span")
-    Jaeger.finish()
-
-
     res.send({code: 200, msg: "success"});
 });
 
