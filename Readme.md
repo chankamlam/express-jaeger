@@ -138,9 +138,9 @@ app.listen(3000, '127.0.0.1', function () {
 ![avatar](https://raw.githubusercontent.com/chankamlam/express-jaeger/master/pic/2.png)
 
 
-# Objects
+# Object Detail
 
-## Config
+## _Config_
 > for what is usage of the param, pls look up to "jaeger-client"
 ```
 {
@@ -171,7 +171,7 @@ app.listen(3000, '127.0.0.1', function () {
 }
 ```
 
-## options
+## _options_
 > for what is usage of the param, pls look up to "jaeger-client"
 ```
 {
@@ -186,7 +186,7 @@ app.listen(3000, '127.0.0.1', function () {
 }
 ```
 
-## jaeger
+## _jaeger_
 > jaeger object will bind in req when you do "app.use(jaeger(config,options))"
 ```
 {
