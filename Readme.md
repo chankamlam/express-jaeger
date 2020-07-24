@@ -4,21 +4,21 @@
 
 ## Required Reading 
 
-### _Opentracing_ 
+#### _Opentracing_ 
    _To fully understand Opentracing, it's helpful to be familiar with the [OpenTracing project](http://opentracing.io) and
 [terminology](http://opentracing.io/documentation/pages/spec.html) more specifically._
 
-### _Jaeger(One Of Request Tracing System implement Opentracing)_
+#### _Jaeger(One Of Request Tracing System implement Opentracing)_
    _To fully understand Jaeger, it's helpful to be familiar with the [Jaeger project](https://www.jaegertracing.io) and [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)_
 
 ## Simple Concept
 ![avatar](https://www.jaegertracing.io/img/spans-traces.png)
 
-> ### _One request map to one trace_
+> #### _One request map to one trace_
 
-> ### _One trace atleast has one span which is master span_
+> #### _One trace atleast has one span which is master span_
 
-> ### _Master span can have many children spans_
+> #### _Master span can have many children spans_
 
 
 
@@ -30,13 +30,13 @@ npm i @chankamlam/express-jaeger -S
 
 ## Architecture of Jaeger Server
 
-### _for development_
+> ### _for development_
 ![avatar](https://www.jaegertracing.io/img/architecture-v1.png)
 
-### _for prodution_
+> ### _for prodution_
 ![avatar](https://www.jaegertracing.io/img/architecture-v2.png)
 
-### _Build up Jaeger Server Infra locally(development env)_
+> ### _Build up Jaeger Server Infra locally(development env)_
 
 ```
 docker run -d -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 -p5775:5775/udp -p6831:6831/udp -p6832:6832/udp \
