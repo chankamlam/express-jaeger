@@ -137,8 +137,11 @@ app.listen(3000, '127.0.0.1', function () {
 ![avatar](https://raw.githubusercontent.com/chankamlam/express-jaeger/master/pic/1.png)
 ![avatar](https://raw.githubusercontent.com/chankamlam/express-jaeger/master/pic/2.png)
 
+
+# Objects
+
 ## Config
-for what is usage of the param, pls look up to "jaeger-client"
+> for what is usage of the param, pls look up to "jaeger-client"
 ```
 {
   serviceName: "string",           // required
@@ -169,7 +172,7 @@ for what is usage of the param, pls look up to "jaeger-client"
 ```
 
 ## options
-for what is usage of the param, pls look up to "jaeger-client"
+> for what is usage of the param, pls look up to "jaeger-client"
 ```
 {
     contextKey: "string",
@@ -184,6 +187,7 @@ for what is usage of the param, pls look up to "jaeger-client"
 ```
 
 ## jaeger
+> jaeger object will bind in req when you do "app.use(jaeger(config,options))"
 ```
 {
   log        : function(name,content)    // write the log to master span
