@@ -6,7 +6,7 @@ const request = require("./request")
 tags = {
   ...Tags,
   "PROTOCAL":"protocal",
-  "TRACING_TAG":"tracing_tag"
+  "TRACING_TAG":"tracing-tag",
 }
 
 const defaultSampler = {
@@ -44,16 +44,76 @@ var span = null
 var tracing_tag = {}
 
 
-var Jaeger = null
-Jaeger = (cfg={},opt={},cb=undefined)=>{
+const createJaegerInstance = ()=>{
+  return {
+    // span instance
+    span,
+    // tracer instance
+    tracer,
+    // tags of opentracing
+    tags,
+    // use for remote call
+    request : (url,opts={})=>{
+      if(!url) return
+      // handle tracing tag
+      const headers = {}
+      headers[tags.TRACING_TAG] = JSON.stringify(tracing_tag)
+      opts.headers = {...opts.headers,...headers}
+      debug("==========request headers======")
+      debug(opts.headers)
+      return request(url,{...opts,
+        tracer: tracer,
+        rootSpan: span
+      })
+    },
+    // log
+    log:(name,content)=>{
+      if(!span) return
+      span.logEvent(name,content)
+    },
+    // setup tag
+    setTag:(tag,val)=>{
+      if(!span) return
+      span.setTag(tag,val)
+    },
+    // setup mutiple tags
+    addTags:(obj)=>{
+      if(!span && !obj) return
+      span.addTags(obj)
+    },
+    // setup tracing tag which can pass through all remote call by using Jaeger.request
+    setTracingTag:(tag,val)=>{
+      if(!span) return
+      span.setTag(tag,val)
+      tracing_tag[tag] = val
+      debug("===== tracing_tag =====")
+      debug(tracing_tag)
+    },
+    // finish span job
+    finish:()=>{
+      if(!span) return
+      span.finish()
+    },
+    // create new span under master span
+    createSpan:(name)=>{
+      if(!tracer) return
+      return tracer.startSpan(name,{ childOf:span })
+    }
+  }
+}
 
+var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
+    if(!cfg||!opt){
+      debug("get instance by module...")
+      return createJaegerInstance()
+    }
     return (req,res,next)=>{
-        if(tracer==null){
+        if(!tracer){
             const config = {...defaultConfig,...cfg}
             const options = {...defaultOptions,...opt}
             tracer = initTracer(config, options);
         }else{
-          console.log("tracer already exsited")
+          debug("tracer already exsited")
         }
         var parent = tracer.extract(FORMAT_HTTP_HEADERS, req.headers);
         parent = parent ? { childOf: parent } : {};
@@ -72,54 +132,27 @@ Jaeger = (cfg={},opt={},cb=undefined)=>{
         debug("===== tracing_tag =====")
         debug(tracing_tag)
 
-
-
-        const jaeger = {
-          span,
-          tracer,
-          tags,
-          request : (url,opts={})=>{
-            // handle tracing tag
-            const headers = {}
-            headers[tags.TRACING_TAG] = JSON.stringify(tracing_tag)
-            opts.headers = {...opts.headers,...headers}
-            debug("==========request headers======")
-            debug(opts.headers)
-            return request(url,{...opts,
-              tracer: tracer,
-              rootSpan: span
-            })
-          },
-          log:(name,content)=>{
-            span.logEvent(name,content)
-          },
-          setTag:(tag,val)=>{
-            span.setTag(tag,val)
-          },
-          addTags:(obj)=>{
-            span.addTags(obj)
-          },
-          setTracingTag:(tag,val)=>{
-            span.setTag(tag,val)
-            tracing_tag[tag] = val
-            debug("===== tracing_tag =====")
-            debug(tracing_tag)
-          },
-          finish:()=>{
-            span.finish()
-          },
-          createSpan:(name)=>{
-            return tracer.startSpan(name,{ childOf:span })
-          }
-        }
-        req.jaeger = jaeger
-        Jaeger.tracer=tracer
-        Jaeger.span=span
+        // binding jaeger instance to req
+        req.jaeger = createJaegerInstance()
+        // handle callback function which open to programer
         if(cb){
           cb(req,res)
         }
+        // console.log(req)s
+        req.jaeger.setTag("request.ip",req.ip)
+        req.jaeger.setTag("request.method",req.method)
+        req.jaeger.setTag("request.headers",req.headers)
+        req.jaeger.setTag("request.path",req.path)
+        req.jaeger.setTag("request.body",req.body)
+        req.jaeger.setTag("request.query",req.query)
         next();
-        jaeger.finish()
+        // console.log(res)
+        // auto finish for master span
+        res.once("finish", () => {
+          req.jaeger.setTag("response.state", res.statusCode);
+          req.jaeger.setTag("response.result", res.statusMessage);
+          req.jaeger.finish()
+        });
     }
 }
 

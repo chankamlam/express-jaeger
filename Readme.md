@@ -224,7 +224,7 @@ app.listen(3000, '127.0.0.1', function () {
 {
   log        : function(name,content)    // write the log to master span
   setTag     : function(name,Value)      // setup tag to master span
-  addTags    : function({k1:v1,k2:v2})   // setup  mutiple tag to master span
+  addTags    : function({k1:v1,k2:v2})   // setup mutiple tags to master span
   createSpan : function(name)            // create a new span un der master span
   tags       : object                    // all defined tags of opentracing which can be used
   request    : function(url,options)     // using it to remote call service if not it will be broken the tracing to next service
