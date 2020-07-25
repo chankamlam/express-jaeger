@@ -224,13 +224,45 @@ app.listen(3000, '127.0.0.1', function () {
 {
   log        : function(name,content)    // write the log to master span
   setTag     : function(name,Value)      // setup tag to master span
+  addTags    : function({k1:v1,k2:v2})   // setup  mutiple tag to master span
   createSpan : function(name)            // create a new span un der master span
-  finish     : function()                // master span finished
-  tracer     : object
-  span       : object
   tags       : object                    // all defined tags of opentracing which can be used
+  request    : function(url,options)     // using it to remote call service if not it will be broken the tracing to next service
 }
 ```
+### _log_
+```
+req.jaeger.log("info","..........")
+```
+### _setTag_
+```
+const jaeger = req.jaeger
+const tags = jaeger
+// using defined tags by opentracing
+jaeger.setTag(tags.ERROR,true)
+// using your customize tag
+jaeger.setTag("warning",true)
+
+```
+### _addTags_
+```
+const jaeger = req.jaeger
+const tags = jaeger
+// add mutiple tag one time
+jaeger.addTags({"error":true,"info":true})
+```
+### _createSpan_
+```
+const span = jaeger.createSpan("subSpanName")   // create a sub span under master span
+// you also can call method of span
+span.log("info","info......")
+span.setTag("info",true)
+// remember to call finish() if not there is no record send to jaeger
+span.finish();
+```
+### _tags_
+
+### _request_
 
 ## license
 MIT

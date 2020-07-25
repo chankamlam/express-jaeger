@@ -1,6 +1,6 @@
 {
   "name": "@chankamlam/express-jaeger",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "Jaeger middleware to request tracing for express application",
   "keywords": [
     "Jaeger",
@@ -23,6 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "debug": "^4.1.1",
     "jaeger-client": "^3.18.0",
     "opentracing": "^0.14.4",
     "request": "^2.88.2"

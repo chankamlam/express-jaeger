@@ -1,10 +1,12 @@
 const { initTracer } = require("jaeger-client");
+const debug = require('debug')("log")
 const { FORMAT_HTTP_HEADERS,Tags } = require("opentracing");
 const request = require("./request")
 
 tags = {
   ...Tags,
-  "PROTOCAL":"protocal"
+  "PROTOCAL":"protocal",
+  "TRACING_TAG":"tracing_tag"
 }
 
 const defaultSampler = {
@@ -39,33 +41,50 @@ var tracer  = null
 
 var span = null
 
+var tracing_tag = {}
 
-const Jaeger = (cfg={},opt={},cb=undefined)=>{
+
+var Jaeger = null
+Jaeger = (cfg={},opt={},cb=undefined)=>{
 
     return (req,res,next)=>{
         if(tracer==null){
             const config = {...defaultConfig,...cfg}
             const options = {...defaultOptions,...opt}
             tracer = initTracer(config, options);
+        }else{
+          console.log("tracer already exsited")
         }
         var parent = tracer.extract(FORMAT_HTTP_HEADERS, req.headers);
-
         parent = parent ? { childOf: parent } : {};
+        span = tracer.startSpan(req.headers.host+req.path, parent);
 
-        span = tracer.startSpan(req.hostname+req.originalUrl, parent);
+        debug("===== headers =====")
+        debug(req.headers)
+        // handle tracing tag
+        if(req.headers&&req.headers[tags.TRACING_TAG]){
+          tracing_tag = JSON.parse(req.headers[tags.TRACING_TAG])
+        }
+        for (const key in tracing_tag) {
+            const val = tracing_tag[key];
+            span.setTag(key, val);
+        }
+        debug("===== tracing_tag =====")
+        debug(tracing_tag)
 
-        // span.setTag("route", req.path);
-        // span.setTag(tags.PROTOCAL,req.protocol)
-        // span.setTag(tags.HTTP_METHOD,req.method)
-        // span.setTag("body",req.body)
-        // span.setTag("query",req.query)
 
 
         const jaeger = {
           span,
           tracer,
           tags,
-          request : (url,opts)=>{
+          request : (url,opts={})=>{
+            // handle tracing tag
+            const headers = {}
+            headers[tags.TRACING_TAG] = JSON.stringify(tracing_tag)
+            opts.headers = {...opts.headers,...headers}
+            debug("==========request headers======")
+            debug(opts.headers)
             return request(url,{...opts,
               tracer: tracer,
               rootSpan: span
@@ -77,6 +96,15 @@ const Jaeger = (cfg={},opt={},cb=undefined)=>{
           setTag:(tag,val)=>{
             span.setTag(tag,val)
           },
+          addTags:(obj)=>{
+            span.addTags(obj)
+          },
+          setTracingTag:(tag,val)=>{
+            span.setTag(tag,val)
+            tracing_tag[tag] = val
+            debug("===== tracing_tag =====")
+            debug(tracing_tag)
+          },
           finish:()=>{
             span.finish()
           },
@@ -85,6 +113,8 @@ const Jaeger = (cfg={},opt={},cb=undefined)=>{
           }
         }
         req.jaeger = jaeger
+        Jaeger.tracer=tracer
+        Jaeger.span=span
         if(cb){
           cb(req,res)
         }
