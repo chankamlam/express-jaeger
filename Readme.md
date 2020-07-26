@@ -129,8 +129,10 @@ app.get("/errorUsingSpan2Log", async function (req, res) {
 
 app.get("/remoteCallingAndlogResult", async function (req, res) {
     const jaeger = req.jaeger
-    // for remote request, you have to use jaeger.request which wrap request by tracing
-    const result = await jaeger.request("http://localhost:3001/bc");
+    // for remote request, you have to use jaeger.axios which wrap axios by tracing
+    const result = await jaeger
+                         .axios({url:"http://localhost:3001/bc"})
+                         .then(r=>r.data);
     jaeger.log("result",result)
     res.send({code: 200, msg: "success"});
 });
@@ -141,13 +143,17 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
 
     // default under master span (auto create by every request)
     const span1 = jaeger.createSpan("resut1")
-    const result1 = await jaeger.request("http://localhost:3001/a");
+    const result1 = await jaeger
+                          .axios({url:"http://localhost:3001/a"})
+                          .then(r=>r.data);
     span1.log("result1",result1)
     span1.finish();
 
     // default under master span (auto create by every request)
     const span2 = jaeger.createSpan("resut2")
-    const result2 = await jaeger.request("http://localhost:3001/b");
+    const result2 = await jaeger
+                          .axios({url:"http://localhost:3001/b",method:"post",data:{}})
+                          .then(r=>r.data);
     span2.log("result2",result2)
     span2.finish();
 
@@ -227,7 +233,7 @@ app.listen(3000, '127.0.0.1', function () {
   addTags    : function({k1:v1,k2:v2})   // setup mutiple tags to master span
   createSpan : function(name)            // create a new span un der master span
   tags       : object                    // all defined tags of opentracing which can be used
-  request    : function(url,options)     // using it to remote call service if not it will be broken the tracing to next service
+  axios      : function(url,options)     // using it to remote call service if not it will be broken the tracing to next service
 }
 ```
 ### _log_
@@ -262,7 +268,7 @@ span.finish();
 ```
 ### _tags_
 
-### _request_
+### _axios_
 
 ## license
 MIT

@@ -1,9 +1,9 @@
 const { initTracer } = require("jaeger-client");
 const debug = require('debug')("log")
 const { FORMAT_HTTP_HEADERS,Tags } = require("opentracing");
-const request = require("./request")
+const axios = require("axios")
 
-tags = {
+const tags = {
   ...Tags,
   "PROTOCAL":"protocal",
   "TRACING_TAG":"tracing-tag",
@@ -27,9 +27,9 @@ const defaultLogger = {
   }
 };
 
-var defaultOptions = { logger: defaultLogger };
+const defaultOptions = { logger: defaultLogger };
 
-var defaultConfig =  {
+const defaultConfig =  {
   serviceName:"Unknow",
   reporter: defaultReporter,
   sampler: defaultSampler
@@ -40,6 +40,7 @@ var tracer  = null
 
 
 var span = null
+
 
 var tracing_tag = {}
 
@@ -53,18 +54,18 @@ const createJaegerInstance = ()=>{
     // tags of opentracing
     tags,
     // use for remote call
-    request : (url,opts={})=>{
-      if(!url) return
+    axios : (opts=undefined)=>{
+      if(!opts) return
       // handle tracing tag
-      const headers = {}
+      var options = {}
+      var headers = {}
       headers[tags.TRACING_TAG] = JSON.stringify(tracing_tag)
+      tracer.inject(span, FORMAT_HTTP_HEADERS, headers);
       opts.headers = {...opts.headers,...headers}
+      options = {...opts}
       debug("==========request headers======")
       debug(opts.headers)
-      return request(url,{...opts,
-        tracer: tracer,
-        rootSpan: span
-      })
+      return axios(options)
     },
     // log
     log:(name,content)=>{
@@ -103,11 +104,16 @@ const createJaegerInstance = ()=>{
 }
 
 var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
+    
+    // for direct using
     if(!cfg||!opt){
       debug("get instance by module...")
       return createJaegerInstance()
     }
+
+    // for express using
     return (req,res,next)=>{
+        // init tracer
         if(!tracer){
             const config = {...defaultConfig,...cfg}
             const options = {...defaultOptions,...opt}
@@ -115,12 +121,16 @@ var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
         }else{
           debug("tracer already exsited")
         }
+
+        if(!tracer) return
+        // extract http/https headers
         var parent = tracer.extract(FORMAT_HTTP_HEADERS, req.headers);
         parent = parent ? { childOf: parent } : {};
         span = tracer.startSpan(req.headers.host+req.path, parent);
-
         debug("===== headers =====")
         debug(req.headers)
+
+        if(!span) return
         // handle tracing tag
         if(req.headers&&req.headers[tags.TRACING_TAG]){
           tracing_tag = JSON.parse(req.headers[tags.TRACING_TAG])
@@ -134,11 +144,13 @@ var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
 
         // binding jaeger instance to req
         req.jaeger = createJaegerInstance()
+
         // handle callback function which open to programer
         if(cb){
           cb(req,res)
         }
-        // console.log(req)s
+
+        // mark default tag of request
         req.jaeger.setTag("request.ip",req.ip)
         req.jaeger.setTag("request.method",req.method)
         req.jaeger.setTag("request.headers",req.headers)
@@ -146,9 +158,10 @@ var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
         req.jaeger.setTag("request.body",req.body)
         req.jaeger.setTag("request.query",req.query)
         next();
-        // console.log(res)
+
         // auto finish for master span
         res.once("finish", () => {
+          //mark default tag of response
           req.jaeger.setTag("response.state", res.statusCode);
           req.jaeger.setTag("response.result", res.statusMessage);
           req.jaeger.finish()
