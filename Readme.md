@@ -264,7 +264,7 @@ jaeger.setTag(tags.ERROR,true)
 jaeger.setTag("warning",true)
 
 ```
-### _setTag_
+### _setTracingTag_
 ```
 const jaeger = req.jaeger
 const tags = jaeger
