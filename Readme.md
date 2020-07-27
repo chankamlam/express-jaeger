@@ -83,6 +83,7 @@ app.listen(3000, '127.0.0.1', function () {
 });
 ```
 # Usage
+## _normallyUsingSpan2Log_
 ```
 const express = require("express");
 const jaeger = require("@chankamlam/express-jaeger")
@@ -109,12 +110,17 @@ const options = { baggagePrefix: "-Johua-" };
  */
 app.use(jaeger(config,options));
 
-app.get("/normalUsingSpan2Log", async function (req, res) {
+app.get("/normallyUsingSpan2Log", async function (req, res) {
     const jaeger = req.jaeger;
     jaeger.log("timestamp",Date.now());
     res.send({code: 200, msg: "success"});
 });
-
+app.listen(3000, '127.0.0.1', function () {
+    console.log('start server...');
+});
+```
+## _usingSpan2LogWithError_
+```
 app.get("/errorUsingSpan2Log", async function (req, res) {
     const jaeger = req.jaeger;
     const tags = req.jaeger.tags;
@@ -126,7 +132,9 @@ app.get("/errorUsingSpan2Log", async function (req, res) {
     }
     res.send({code: 200, msg: "success"});
 });
-
+```
+## _remoteCallingAndlogResult_
+```
 app.get("/remoteCallingAndlogResult", async function (req, res) {
     const jaeger = req.jaeger
     // for remote request, you have to use jaeger.axios which wrap axios by tracing
@@ -136,7 +144,9 @@ app.get("/remoteCallingAndlogResult", async function (req, res) {
     jaeger.log("result",result)
     res.send({code: 200, msg: "success"});
 });
-
+```
+## _remoteCallingAndlogResultInTwoSpan_
+```
 app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
 
     const jaeger = req.jaeger
@@ -161,12 +171,6 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
     res.send({code: 200, msg: "success"});
 });
 
-
-
-app.listen(3000, '127.0.0.1', function () {
-    console.log('start server...');
-});
-
 ```
 # Lookup Request Tracing
 
@@ -179,7 +183,7 @@ app.listen(3000, '127.0.0.1', function () {
 # Object Detail
 
 ## _Config_
-> for what is usage of the param, pls look up to "jaeger-client"
+> for detail, pls look up to [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)
 ```
 {
   serviceName: "string",           // required
@@ -210,7 +214,7 @@ app.listen(3000, '127.0.0.1', function () {
 ```
 
 ## _options_
-> for what is usage of the param, pls look up to "jaeger-client"
+> for detail, pls look up to [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)
 ```
 {
     contextKey: "string",
@@ -269,6 +273,6 @@ span.finish();
 ### _tags_
 
 ### _axios_
-
+jaeger.axios wrap axios with tracing header, for usage detail pls look up to [axios](https://www.npmjs.com/package/axios)
 ## license
 MIT
