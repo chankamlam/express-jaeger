@@ -1,5 +1,13 @@
 # Express-Jaeger
 
+                                         _                            
+  _____  ___ __  _ __ ___  ___ ___      (_) __ _  ___  __ _  ___ _ __ 
+ / _ \ \/ / '_ \| '__/ _ \/ __/ __|_____| |/ _` |/ _ \/ _` |/ _ \ '__|
+|  __/>  <| |_) | | |  __/\__ \__ \_____| | (_| |  __/ (_| |  __/ |   
+ \___/_/\_\ .__/|_|  \___||___/___/    _/ |\__,_|\___|\__, |\___|_|   
+          |_|                         |__/            |___/           
+
+
 **Jaeger middleware to request tracing for express application**
 
 # Required Reading 
@@ -232,12 +240,13 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
 > jaeger object will bind in req when you do "app.use(jaeger(config,options))"
 ```
 {
-  log        : function(name,content)    // write the log to master span
-  setTag     : function(name,Value)      // setup tag to master span
-  addTags    : function({k1:v1,k2:v2})   // setup mutiple tags to master span
-  createSpan : function(name)            // create a new span un der master span
-  tags       : object                    // all defined tags of opentracing which can be used
-  axios      : function(url,options)     // using it to remote call service if not it will be broken the tracing to next service
+  log           : function(name,content)    // write the log to master span
+  setTag        : function(name,value)      // setup tag to master span
+  setTracingTag : function(name,value)      // setup tag to master span and children span 
+  addTags       : function({k1:v1,k2:v2})   // setup mutiple tags to master span
+  createSpan    : function(name)            // create a new span un der master span
+  tags          : object                    // all defined tags of opentracing which can be used
+  axios         : function(url,options)     // using it to remote call service if not it will be broken the tracing to next service
 }
 ```
 ### _log_
@@ -253,6 +262,12 @@ jaeger.setTag(tags.ERROR,true)
 // using your customize tag
 jaeger.setTag("warning",true)
 
+```
+### _setTag_
+```
+const jaeger = req.jaeger
+const tags = jaeger
+jaeger.setTracingTag("waybill","wb-123456")
 ```
 ### _addTags_
 ```
@@ -271,7 +286,7 @@ span.setTag("info",true)
 span.finish();
 ```
 ### _tags_
-
+defined tag, some come from [OpenTracing project](http://opentracing.io)
 ### _axios_
 jaeger.axios wrap axios with tracing header, for usage detail pls look up to [axios](https://www.npmjs.com/package/axios)
 ## license
