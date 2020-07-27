@@ -287,7 +287,7 @@ span.setTag("info",true)
 span.finish();
 ```
 ### _tags_
-defined tag, some come from [OpenTracing project](http://opentracing.io)
+predefined tag, some come from [OpenTracing project](http://opentracing.io)
 ### _axios_
 jaeger.axios wrap axios with tracing header, for usage detail pls look up to [axios](https://www.npmjs.com/package/axios)
 ## license
