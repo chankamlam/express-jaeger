@@ -111,7 +111,10 @@ const config = {
 };
 
 // setup options, defaut is {}
-const options = { baggagePrefix: "-Johua-" };
+const options = { 
+  baggagePrefix: "-Johua-",
+  excludePath:["/api/v1/health","/api/v1/metric"]                 // exclude path
+   };
 
 /*  
  *  using jager,after this it will has one object which called jaeger,
@@ -234,6 +237,7 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
     traceId128bit: "boolean",
     shareRpcSpan: "boolean",
     debugThrottler: "boolean",
+    excludePath:"array"  // array of parttern for excluding record the access
 }
 ```
 

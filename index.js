@@ -2,6 +2,7 @@ const { initTracer } = require("jaeger-client");
 const debug = require('debug')("log")
 const { FORMAT_HTTP_HEADERS,Tags } = require("opentracing");
 const axios = require("axios")
+const process = require("process")
 
 const tags = {
   ...Tags,
@@ -104,14 +105,19 @@ const createJaegerInstance = ()=>{
 }
 
 var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
+
+    // pass for CI
+    if(process.env&&process.env["CI_RUNNER_ID"]){
+      return (req,res,next)=>{next()}
+    }
     
-    // for direct using
+    // for using in directive
     if(!cfg||!opt){
       debug("get instance by module...")
       return createJaegerInstance()
     }
 
-    // for express using
+    // for using in express
     return (req,res,next)=>{
         // init tracer
         if(!tracer){
@@ -122,15 +128,33 @@ var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
           debug("tracer already exsited")
         }
 
-        if(!tracer) return
+        if(!tracer) {
+          throw new Error("Express-Jaeger Error: Tracer init failed...")
+        }
+
+        // check exclude array
+        if(opt&&opt["excludePath"]&&opt["excludePath"] instanceof Array){
+          let arr = opt["excludePath"]
+          for (let i = 0; i < arr.length; i++) {
+            const path = arr[i];
+            const regex = new RegExp(path)
+            if(regex.test(req.path)){
+              next()
+              break
+            }
+          }
+        }
+
         // extract http/https headers
         var parent = tracer.extract(FORMAT_HTTP_HEADERS, req.headers);
         parent = parent ? { childOf: parent } : {};
         span = tracer.startSpan(req.headers.host+req.path, parent);
         debug("===== headers =====")
         debug(req.headers)
-
-        if(!span) return
+        
+        if(!span) {
+          throw new Error("Express-Jaeger Error: Span init failed...")
+        }
         // handle tracing tag
         if(req.headers&&req.headers[tags.TRACING_TAG]){
           tracing_tag = JSON.parse(req.headers[tags.TRACING_TAG])
