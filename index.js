@@ -135,14 +135,17 @@ var Jaeger = (cfg=undefined,opt=undefined,cb=undefined)=>{
         // check exclude array
         if(opt&&opt["excludePath"]&&opt["excludePath"] instanceof Array){
           let arr = opt["excludePath"]
+          let isPass = false
           for (let i = 0; i < arr.length; i++) {
             const path = arr[i];
             const regex = new RegExp(path)
             if(regex.test(req.path)){
-              next()
+              isPass = true
               break
             }
           }
+          isPass && next()
+          return
         }
 
         // extract http/https headers
