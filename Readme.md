@@ -1,26 +1,31 @@
 # Express-Jaeger
+
 ```
 
-                                         _                            
-  _____  ___ __  _ __ ___  ___ ___      (_) __ _  ___  __ _  ___ _ __ 
+                                         _
+  _____  ___ __  _ __ ___  ___ ___      (_) __ _  ___  __ _  ___ _ __
  / _ \ \/ / '_ \| '__/ _ \/ __/ __|_____| |/ _` |/ _ \/ _` |/ _ \ '__|
-|  __/>  <| |_) | | |  __/\__ \__ \_____| | (_| |  __/ (_| |  __/ |   
- \___/_/\_\ .__/|_|  \___||___/___/    _/ |\__,_|\___|\__, |\___|_|   
-          |_|                         |__/            |___/           
+|  __/>  <| |_) | | |  __/\__ \__ \_____| | (_| |  __/ (_| |  __/ |
+ \___/_/\_\ .__/|_|  \___||___/___/    _/ |\__,_|\___|\__, |\___|_|
+          |_|                         |__/            |___/
 
 ```
+
 **Jaeger middleware to request tracing for express application**
 
-# Required Reading 
+# Required Reading
 
-#### _Opentracing_ 
-   _To fully understand Opentracing, it's helpful to be familiar with the [OpenTracing project](http://opentracing.io) and
+#### _Opentracing_
+
+_To fully understand Opentracing, it's helpful to be familiar with the [OpenTracing project](http://opentracing.io) and
 [terminology](http://opentracing.io/documentation/pages/spec.html) more specifically._
 
 #### _Jaeger(One Of Request Tracing System implement Opentracing)_
-   _To fully understand Jaeger, it's helpful to be familiar with the [Jaeger project](https://www.jaegertracing.io) and [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)_
+
+_To fully understand Jaeger, it's helpful to be familiar with the [Jaeger project](https://www.jaegertracing.io) and [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)_
 
 # Simple Concept
+
 ![avatar](https://www.jaegertracing.io/img/spans-traces.png)
 
 > #### _One request map to one trace_
@@ -28,8 +33,6 @@
 > #### _One trace atleast has one span which is master span_
 
 > #### _Master span can have many children spans_
-
-
 
 # Installation
 
@@ -40,10 +43,12 @@ npm i @chankamlam/express-jaeger -S
 ## Architecture of Jaeger Server
 
 > ### _for development_
-![avatar](https://www.jaegertracing.io/img/architecture-v1.png)
+>
+> ![avatar](https://www.jaegertracing.io/img/architecture-v1.png)
 
 > ### _for prodution_
-![avatar](https://www.jaegertracing.io/img/architecture-v2.png)
+>
+> ![avatar](https://www.jaegertracing.io/img/architecture-v2.png)
 
 > ### _Build up Jaeger Server Infra locally(development env)_
 
@@ -53,6 +58,7 @@ docker run -d -e COLLECTOR_ZIPKIN_HTTP_PORT=9411 -p5775:5775/udp -p6831:6831/udp
 ```
 
 # Quick Start
+
 ```
 const express = require("express");
 const jaeger = require("@chankamlam/express-jaeger");
@@ -68,10 +74,10 @@ const config = {
         collectorEndpoint: "http://localhost:14268/api/traces"
     },
 };                                                      // required
-const options = { 
+const options = {
   baggagePrefix: "-Johua-",                             // optional,you can let options={}
   excludePath:["/api/v1/health","/api/v1/metric"]       // exclude path
-  }; 
+  };
 
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/
@@ -94,8 +100,11 @@ app.listen(3000, '127.0.0.1', function () {
     console.log('start');
 });
 ```
+
 # Usage
+
 ## _normallyUsingSpan2Log_
+
 ```
 const express = require("express");
 const jaeger = require("@chankamlam/express-jaeger")
@@ -114,12 +123,12 @@ const config = {
 };
 
 // setup options, defaut is {}
-const options = { 
+const options = {
   baggagePrefix: "-Johua-",
   excludePath:["/api/v1/health","/api/v1/metric"]                 // exclude path
    };
 
-/*  
+/*
  *  using jager,after this it will has one object which called jaeger,
  *  with four properties(span,tracer,request,tags) binding in req
  */
@@ -134,7 +143,9 @@ app.listen(3000, '127.0.0.1', function () {
     console.log('start server...');
 });
 ```
+
 ## _usingSpan2LogWithError_
+
 ```
 app.get("/errorUsingSpan2Log", async function (req, res) {
     const jaeger = req.jaeger;
@@ -148,7 +159,9 @@ app.get("/errorUsingSpan2Log", async function (req, res) {
     res.send({code: 200, msg: "success"});
 });
 ```
+
 ## _remoteCallingAndlogResult_
+
 ```
 app.get("/remoteCallingAndlogResult", async function (req, res) {
     const jaeger = req.jaeger
@@ -160,7 +173,9 @@ app.get("/remoteCallingAndlogResult", async function (req, res) {
     res.send({code: 200, msg: "success"});
 });
 ```
+
 ## _remoteCallingAndlogResultInTwoSpan_
+
 ```
 app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
 
@@ -187,18 +202,20 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
 });
 
 ```
+
 # Lookup Request Tracing
 
-> open url  http://localhost:16686 , remember to build up the Jager Server locally first
+> open url http://localhost:16686 , remember to build up the Jager Server locally first
 
 ![avatar](https://raw.githubusercontent.com/chankamlam/express-jaeger/master/pic/1.png)
 ![avatar](https://raw.githubusercontent.com/chankamlam/express-jaeger/master/pic/2.png)
 
-
 # Object Detail
 
 ## _Config_
+
 > for detail, pls look up to [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)
+
 ```
 {
   serviceName: "string",           // required
@@ -229,7 +246,9 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
 ```
 
 ## _options_
+
 > for detail, pls look up to [Jaeger Client for Node](https://www.npmjs.com/package/jaeger-client)
+
 ```
 {
     contextKey: "string",
@@ -245,23 +264,29 @@ app.get("/remoteCallingAndlogResultInTwoSpan", async function (req, res) {
 ```
 
 ## _jaeger_
+
 > jaeger object will bind in req when you do "app.use(jaeger(config,options))"
+
 ```
 {
   log           : function(name,content)    // write the log to master span
   setTag        : function(name,value)      // setup tag to master span
-  setTracingTag : function(name,value)      // setup tag to master span and children span 
+  setTracingTag : function(name,value)      // setup tag to master span and children span
   addTags       : function({k1:v1,k2:v2})   // setup mutiple tags to master span
-  createSpan    : function(name)            // create a new span un der master span
+  createSpan    : function(name,parentSpan)            // create a new span under parent span,if parentSpan is undefine will under master span
   tags          : object                    // all defined tags of opentracing which can be used
   axios         : function(url,options)     // using it to remote call service if not it will be broken the tracing to next service
 }
 ```
+
 ### _log_
+
 ```
 req.jaeger.log("info","..........")
 ```
+
 ### _setTag_
+
 ```
 const jaeger = req.jaeger
 const tags = jaeger
@@ -271,20 +296,26 @@ jaeger.setTag(tags.ERROR,true)
 jaeger.setTag("warning",true)
 
 ```
+
 ### _setTracingTag_
+
 ```
 const jaeger = req.jaeger
 const tags = jaeger
 jaeger.setTracingTag("waybill","wb-123456")
 ```
+
 ### _addTags_
+
 ```
 const jaeger = req.jaeger
 const tags = jaeger
 // add mutiple tag one time
 jaeger.addTags({"error":true,"info":true})
 ```
+
 ### _createSpan_
+
 ```
 const span = jaeger.createSpan("subSpanName")   // create a sub span under master span
 // you also can call method of span
@@ -293,9 +324,15 @@ span.setTag("info",true)
 // remember to call finish() if not there is no record send to jaeger
 span.finish();
 ```
+
 ### _tags_
+
 predefined tag, some come from [OpenTracing project](http://opentracing.io)
+
 ### _axios_
+
 jaeger.axios wrap axios with tracing header, for usage detail pls look up to [axios](https://www.npmjs.com/package/axios)
+
 ## license
+
 MIT
