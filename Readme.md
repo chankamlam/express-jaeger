@@ -67,8 +67,11 @@ const config = {
     reporter: {
         collectorEndpoint: "http://localhost:14268/api/traces"
     },
-};                                             // required
-const options = { baggagePrefix: "-Johua-" };  // optional,you can let options={}
+};                                                      // required
+const options = { 
+  baggagePrefix: "-Johua-",                             // optional,you can let options={}
+  excludePath:["/api/v1/health","/api/v1/metric"]       // exclude path
+  }; 
 
 app.use(express.json()) // for parsing application/json
 app.use(express.urlencoded({ extended: true })) // for parsing application/
