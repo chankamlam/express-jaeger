@@ -41,9 +41,6 @@ const DAFAULT_CONFIG = {
 // tracer instance
 var tracer = null
 
-// master span instance
-var span = null
-
 // tracing tag form request and  will send to remote call
 var tracing_tag = {}
 
@@ -51,7 +48,7 @@ var tracing_tag = {}
  * Inject tracing tag to headers for remote call
  * @param {*} opts 
  */
-const injectSpan = (opts = undefined) => {
+const injectSpan = (span, opts = undefined) => {
   var headers = {}
   headers[TAGS.TRACING_TAG] = JSON.stringify(tracing_tag)
   tracer.inject(span, FORMAT_HTTP_HEADERS, headers);
@@ -78,7 +75,7 @@ const printMsg = function (title, msg) {
 /**
  * create a jaeger instance
  */
-const createJaegerInstance = () => {
+const createJaegerInstance = (span) => {
   return {
     // span instance
     span,
@@ -94,7 +91,7 @@ const createJaegerInstance = () => {
       return (function () {
         let obj = function (opts) {
           // handle tracing header
-          var options = injectSpan(opts)
+          var options = injectSpan(span, opts)
           return axios(options)
         }
         for (const key in axios) {
@@ -102,22 +99,22 @@ const createJaegerInstance = () => {
             const element = axios[key];
             obj[key] = function () {
               if (arguments.length == 0) {
-                arguments = injectSpan({})
+                arguments = injectSpan(span, {})
               }
               else if (arguments.length == 1 && typeof (arguments[0]) == STRING) {
-                arguments[1] = injectSpan(arguments[0])
+                arguments[1] = injectSpan(span, arguments[0])
               }
               else if (arguments.length == 1 && typeof (arguments[0]) != STRING) {
-                arguments[0] = injectSpan(arguments[0])
+                arguments[0] = injectSpan(span, arguments[0])
               }
               else if (arguments.length == 2) {
                 arguments[1].url = arguments[0]
-                arguments[1] = injectSpan(arguments[1])
+                arguments[1] = injectSpan(span, arguments[1])
               }
               else if (arguments.length == 3) {
                 arguments[2].data = arguments[1]
                 arguments[2].url = arguments[0]
-                arguments[2] = injectSpan(arguments[2])
+                arguments[2] = injectSpan(span, arguments[2])
               }
               return element.apply(null, Array.prototype.slice.call(arguments))
             }
@@ -162,7 +159,7 @@ const createJaegerInstance = () => {
     createSpan: (name, parent) => {
       const parentObj = parent
         ? { childOf: parent }
-        : { childOf: this.span };
+        : { childOf: span };
       if (!tracer) return
       return tracer.startSpan(name, parentObj)
     }
@@ -181,7 +178,6 @@ const initiateTracer = (cfg = {}, opt = {}) => {
 }
 
 var Jaeger = (cfg = {}, opt = {}, cb = undefined) => {
-
 
   ////////////////////////////////////////////////////////////////////
   ///
@@ -202,6 +198,9 @@ var Jaeger = (cfg = {}, opt = {}, cb = undefined) => {
 
   // for using in express
   return (req, res, next) => {
+
+    // master span
+    var span = null;
 
     initiateTracer(cfg, opt)
 
@@ -256,7 +255,7 @@ var Jaeger = (cfg = {}, opt = {}, cb = undefined) => {
 
 
     // binding jaeger instance to req
-    req.jaeger = createJaegerInstance()
+    req.jaeger = createJaegerInstance(span)
 
 
     // handle callback function which open to programer
@@ -275,16 +274,19 @@ var Jaeger = (cfg = {}, opt = {}, cb = undefined) => {
     req.jaeger.setTag("request.query", req.query || UNKNOW)
     /////////////////////////////////////////////////////
 
-    next();
-
-    // auto finish for master span
     res.once("finish", () => {
       //mark default tag of response
       req.jaeger.setTag("response.state", res.statusCode || UNKNOW);
       req.jaeger.setTag("response.result", res.statusMessage || UNKNOW);
+    });
+
+    // auto finish for master span
+    res.once("close", () => {
       req.jaeger.finish()
     });
     /////////////////////////////////////////////////////
+
+    next();
   }
 }
 
